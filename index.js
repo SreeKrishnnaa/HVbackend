@@ -5,9 +5,11 @@ const mongoose=require("mongoose");
 const multer=require("multer");
 const path=require("path");
 const cors=require("cors");
-
 app.use(express.json());
 app.use(cors());
+
+
+app.use("/files",express.static("files"))
 //to run enter node .\index.js in terminal
 
 
@@ -19,7 +21,7 @@ mongoose.connect("mongodb+srv://sreekrishnnaa:sree2003@project1.xk0wkup.mongodb.
 
 
 app.get("/",(req,res)=>{
-res.send("express is running")
+res.send("server is running")
 })
 
 
@@ -27,7 +29,7 @@ res.send("express is running")
 
 app.listen(port,(error)=>{
 if(!error){
-    console.log("Server Running in "+port);
+    console.log("Server Running in the port"+port);
 }
 else{
     console.log("error:"+error);
@@ -51,7 +53,7 @@ require("./pdfDetails");
 const PdfSchema = mongoose.model("PdfDetails");
 const upload = multer({ storage: storage });
 
-app.post("/upload-files", upload.single("file"), async (req, res) => {
+app.post("/uploadfiles", upload.single("file"), async (req, res) => {
   console.log(req.file);
   const title = req.body.title;
   const fileName = req.file.filename;
@@ -63,7 +65,7 @@ app.post("/upload-files", upload.single("file"), async (req, res) => {
   }
 });
 
-app.get("/get-files", async (req, res) => {
+app.get("/getfiles", async (req, res) => {
   try {
     PdfSchema.find({}).then((data) => {
       res.send({ status: "ok", data: data });
