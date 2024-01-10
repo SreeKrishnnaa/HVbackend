@@ -29,7 +29,7 @@ res.send("server is running")
 
 app.listen(port,(error)=>{
 if(!error){
-    console.log("Server Running in the port"+port);
+    console.log("Server Running in the port "+port);
 }
 else{
     console.log("error:"+error);
@@ -74,4 +74,17 @@ app.get("/getfiles", async (req, res) => {
 });
 
 
-
+app.delete('/deletefiles/:id', async (req, res) => {
+  try {
+    const deletedRecord = await PdfSchema.deleteOne({ _id: req.params.id });
+    
+    if (deletedRecord.deletedCount === 1) {
+      res.send({ status: 'ok', data: deletedRecord });
+    } else {
+      res.status(404).send({ status: 'not found', message: 'Record not found' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ status: 'error', message: 'Internal Server Error' });
+  }
+});
