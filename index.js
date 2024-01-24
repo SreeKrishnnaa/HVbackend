@@ -7,10 +7,14 @@ const path=require("path");
 const cors=require("cors");
 app.use(express.json());
 app.use(cors());
-
+import("trash").then((trash) => {
+  // Now you can use the 'trash' module here
+}).catch((error) => {
+  console.error("Error importing 'trash' module:", error);
+});
 
 app.use("/files",express.static("files"))
-//to run enter node .\index.js in terminal
+//to run enter node index.js in terminal
 
 
 //DB connect
@@ -53,17 +57,30 @@ require("./pdfDetails");
 const PdfSchema = mongoose.model("PdfDetails");
 const upload = multer({ storage: storage });
 
+
+//post method
 app.post("/uploadfiles", upload.single("file"), async (req, res) => {
   console.log(req.file);
+
+  
+  const authenticatedUser = req.user;
+  
+  const userName = authenticatedUser ? authenticatedUser.sub : 'Anonymous';
+  
   const title = req.body.title;
   const fileName = req.file.filename;
+
   try {
-    await PdfSchema.create({ title: title, pdf: fileName });
+    // Assuming PdfSchema is your Mongoose model
+    await PdfSchema.create({ title: title, pdf: fileName, userName: userName });
     res.send({ status: "ok" });
   } catch (error) {
     res.json({ status: error });
   }
 });
+
+
+//get method
 
 app.get("/getfiles", async (req, res) => {
   try {
@@ -73,11 +90,26 @@ app.get("/getfiles", async (req, res) => {
   } catch (error) {}
 });
 
-
+//delete method
 app.delete('/deletefiles/:id', async (req, res) => {
   try {
+    // Dynamically import the 'trash' module
+    const { default: trash } = await import("trash");
+
+    const pdf = await PdfSchema.findById(req.params.id);
+
+    if (!pdf) {
+      return res.status(404).send({ status: 'not found', message: 'Record not found' });
+    }
+
+    const filePath = path.join(__dirname, 'files', pdf.pdf);
+
+    // Move the file to trash using the 'trash' module
+    await trash(filePath);
+
+    // Now you can delete the record from the database
     const deletedRecord = await PdfSchema.deleteOne({ _id: req.params.id });
-    
+
     if (deletedRecord.deletedCount === 1) {
       res.send({ status: 'ok', data: deletedRecord });
     } else {
